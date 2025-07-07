@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MetaspeQ Spectral Intelligence Engine</title>
+    <style>
+        :root {
+            --primary-color: #003366;
+            --secondary-color: #0066cc;
+            --success-color: #28a745;
+            --error-color: #dc3545;
+            --light-gray: #f8f9fa;
+            --dark-gray: #343a40;
+            --warning-color: #ffc107; /* Added for disabled states */
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: var(--light-gray);
+        }
+        
+        h1 {
+            color: var(--primary-color);
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 10px;
+        }
+        
+        .message-container {
+            margin: 20px 0;
+        }
+        
+        /* Base style for all flash messages */
+        .flash-message {
+            font-weight: bold;
+            padding: 10px 15px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+        }
+
+        /* Specific style for success messages */
+        .flash-message.success {
+            color: var(--success-color);
+            background-color: rgba(40, 167, 69, 0.1);
+            border-left: 4px solid var(--success-color);
+        }
+        
+        /* Specific style for error messages */
+        .flash-message.error {
+            color: var(--error-color);
+            background-color: rgba(220, 53, 69, 0.1);
+            border-left: 4px solid var(--error-color);
+        }
+
+        .flash-icon {
+            margin-right: 10px;
+            font-size: 1.2rem;
+        }
+        
+        .upload-section {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        
+        .action-section {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        
+        .action-card {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            flex: 1;
+            min-width: 250px;
+        }
+        
+        .action-card h2 {
+            color: var(--primary-color);
+            margin-top: 0;
+            font-size: 1.2rem;
+        }
+        
+        form {
+            margin-top: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        
+        input[type="file"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+        
+        input[type="submit"], button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background-color 0.3s;
+        }
+        
+        input[type="submit"]:hover:not(:disabled), button:hover:not(:disabled) {
+            background-color: var(--secondary-color);
+        }
+
+        input[type="submit"]:disabled, button:disabled {
+            background-color: #cccccc; /* Lighter gray for disabled buttons */
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        
+        .file-status {
+            font-size: 0.9rem;
+            color: var(--dark-gray);
+            margin-top: 10px;
+        }
+        
+        .file-status strong {
+            color: var(--primary-color);
+        }
+        
+        .loading {
+            display: none;
+            margin-top: 10px;
+            font-size: 0.9rem;
+            color: var(--primary-color);
+        }
+        
+        .loading-spinner {
+            border: 3px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top: 3px solid var(--primary-color);
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <h1>MetaspeQ Spectral Intelligence Engine</h1>
+    
+    <div class="message-container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="flash-message {{ category }}">
+                {% if category == 'success' %}
+                    <span class="flash-icon">&#10003;</span> <!-- Checkmark -->
+                {% elif category == 'error' %}
+                    <span class="flash-icon">&#x2717;</span> <!-- X mark -->
+                {% endif %}
+                {{ message }}
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+    </div>
+    
+    <div class="upload-section">
+        <h2>Upload Files</h2>
+        
+        <form action="/upload_data" method="post" enctype="multipart/form-data" id="dataForm">
+            <label for="data_file">Spectral Data File (Excel/CSV):</label>
+            <input type="file" name="data_file" id="data_file" accept=".xlsx,.xls,.csv" required>
+            <input type="submit" value="Upload Data">
+            <div class="loading" id="dataLoading">
+                <span class="loading-spinner"></span> Uploading...
+            </div>
+            {% if 'data_file' in session %}
+              <p class="file-status"><strong>Uploaded:</strong> {{ session['data_file'] }}</p>
+            {% endif %}
+        </form>
+        
+        <form action="/upload_wavelength" method="post" enctype="multipart/form-data" id="wavelengthForm">
+            <label for="wavelength_file">Wavelength File (Excel/CSV):</label>
+            <input type="file" name="wavelength_file" id="wavelength_file" accept=".xlsx,.xls,.csv" required>
+            <input type="submit" value="Upload Wavelength">
+            <div class="loading" id="wavelengthLoading">
+                <span class="loading-spinner"></span> Uploading...
+            </div>
+            {% if 'wavelength_file' in session %}
+              <p class="file-status"><strong>Uploaded:</strong> {{ session['wavelength_file'] }}</p>
+            {% endif %}
+        </form>
+    </div>
+    
+    <div class="action-section">
+        <div class="action-card">
+            <h2>Analysis</h2>
+            <form action="/run_analysis" method="post" id="analysisForm">
+                <input type="submit" value="Run Analysis" 
+                        {% if not (data_uploaded and wavelength_uploaded) %}disabled{% endif %}>
+                <div class="loading" id="analysisLoading">
+                    <span class="loading-spinner"></span> Processing...
+                </div>
+            </form>
+            <p>Run the spectral analysis pipeline</p>
+        </div>
+        
+        <div class="action-card">
+            <h2>Report</h2>
+            <form action="/generate_report" method="post" id="reportForm">
+                <input type="submit" value="Generate Report" 
+                        {% if not model_exists %}disabled{% endif %}>
+                <div class="loading" id="reportLoading">
+                    <span class="loading-spinner"></span> Generating...
+                </div>
+            </form>
+            <p>Create a PDF report of the results</p>
+        </div>
+        
+        <div class="action-card">
+            <h2>Downloads</h2>
+            <form action="/download_model" method="get">
+                <input type="submit" value="Download Model" 
+                        {% if not model_exists %}disabled{% endif %}>
+            </form>
+            <form action="/download_report" method="get" style="margin-top: 10px;">
+                <input type="submit" value="Download Report" 
+                        {% if not report_exists %}disabled{% endif %}>
+            </form>
+            <p>Download analysis results</p>
+        </div>
+    </div>
+    
+    <script>
+        // Show loading indicators during form submission
+        document.getElementById('dataForm').addEventListener('submit', function() {
+            document.getElementById('dataLoading').style.display = 'block';
+        });
+        
+        document.getElementById('wavelengthForm').addEventListener('submit', function() {
+            document.getElementById('wavelengthLoading').style.display = 'block';
+        });
+        
+        document.getElementById('analysisForm').addEventListener('submit', function() {
+            // Only show loading if button is not disabled
+            if (!this.querySelector('input[type="submit"]').disabled) {
+                document.getElementById('analysisLoading').style.display = 'block';
+            }
+        });
+        
+        document.getElementById('reportForm').addEventListener('submit', function() {
+            // Only show loading if button is not disabled
+            if (!this.querySelector('input[type="submit"]').disabled) {
+                document.getElementById('reportLoading').style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>
